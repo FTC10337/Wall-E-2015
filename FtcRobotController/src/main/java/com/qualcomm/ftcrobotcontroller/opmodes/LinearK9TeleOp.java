@@ -106,7 +106,7 @@ public class LinearK9TeleOp extends LinearOpMode {
       neck.setPosition(neckPosition);
       jaw.setPosition(jawPosition);
 
-      telemetry.addData("Text", "K9TeleOp");
+      telemetry.addData("Text", "WallETeleOp");
       telemetry.addData(" left motor", motorLeft.getPower());
       telemetry.addData("right motor", motorRight.getPower());
       telemetry.addData("neck", neck.getPosition());

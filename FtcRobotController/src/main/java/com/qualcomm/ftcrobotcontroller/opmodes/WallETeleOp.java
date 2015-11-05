@@ -41,7 +41,7 @@ import com.qualcomm.robotcore.util.Range;
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class K9TeleOp extends OpMode {
+public class WallETeleOp extends OpMode {
 
 	/*
 	 * Note: the configuration of the servos is such that
@@ -74,7 +74,7 @@ public class K9TeleOp extends OpMode {
 	/**
 	 * Constructor
 	 */
-	public K9TeleOp() {
+	public WallETeleOp() {
 
 	}
 
@@ -155,8 +155,8 @@ public class K9TeleOp extends OpMode {
 		// the robot more precisely at slower speeds.
 		right = (float)scaleInput(right);
 		left =  (float)scaleInput(left);
-		//right = (float)smoothPowerCurve(deadzone(right,0.10))*0.5f;
-		//left = (float)smoothPowerCurve(deadzone(left,0.10))*0.5f;
+		//right = (float)smoothPowerCurve(deadzone(right,0.10));
+		//left = (float)smoothPowerCurve(deadzone(left,0.10));
 
 
 		motorRight.setPower(right);
@@ -262,10 +262,10 @@ public class K9TeleOp extends OpMode {
 		double b = 0.15;
 
 		if (x > 0.0)
-			return (b + (1.0-b)*(a*x*x*x+(1.0-a)*x));
+			return ((b + (1.0-b))*(a*x*x*x+(1.0-a)*x));
 
 		else if (x<0.0)
-			return (-b + (1.0-b)*(a*x*x*x+(1.0-a)*x));
+			return ((-b + (1.0-b))*(a*x*x*x+(1.0-a)*x));
 		else return 0.0;
 	}
 
