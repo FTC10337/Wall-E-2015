@@ -59,6 +59,7 @@ public class FtcOpModeRegister implements OpModeRegister {
 
     //manager.register("MatrixK9TeleOp", MatrixK9TeleOp.class);
     manager.register("WallETeleOp", WallETeleOp.class);
+    manager.register("WallEHillHoldTest", WallEEncTest.class);
     //manager.register("K9Line", K9Line.class);
     //manager.register ("PushBotAuto", PushBotAuto.class);
     //manager.register ("PushBotManual", PushBotManual.class);
