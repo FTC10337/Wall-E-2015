@@ -54,7 +54,7 @@ public class WallEEncTest extends OpMode {
 	final static double CLAW_MIN_RANGE  = 0.20;
 	final static double CLAW_MAX_RANGE  = 0.7;
 
-	final static float HILL_HOLD_POWER = 0.10f;
+	final static float HILL_HOLD_POWER = 0.05f;
 
 	// position of the arm servo.
 	double armPosition;
@@ -115,7 +115,7 @@ public class WallEEncTest extends OpMode {
 
 		// Test float vs non-float mode on motors
 		motorRight.setPowerFloat();
-		motorLeft.setPower(0);
+		motorLeft.setPower(0.0f);
 
 		arm = hardwareMap.servo.get("s1");
 		// claw = hardwareMap.servo.get("servo_6");
@@ -170,20 +170,20 @@ public class WallEEncTest extends OpMode {
 
 
 		// Check if hill hold brake set
-		if (gamepad1.x) {
+		if (gamepad1.right_bumper) {
 			// Hill holder is pushed -- Force motor power to at lesat hill holding
 			hillBrake = true;
-		} else if (gamepad1.y) {
-			// Hill holder is released
+		}
+
+
+		if (hillBrake && Math.abs(right) < 0.05 && Math.abs(left) < 0.05){
+			right = HILL_HOLD_POWER;
+			left = HILL_HOLD_POWER;
+		}
+		else {
 			hillBrake = false;
 		}
 
-
-		if (hillBrake) {
-			// Apply Hill Brake since its currently set
-			right = Range.clip(right, HILL_HOLD_POWER, 1.0f);
-			left = Range.clip(left, HILL_HOLD_POWER, 1.0f);
-		}
 
 		motorRight.setPower(right);
 		motorLeft.setPower(left);
@@ -193,13 +193,13 @@ public class WallEEncTest extends OpMode {
 
 
 		// update the position of the arm.
-		if (gamepad1.right_bumper) {
+		if (gamepad1.a) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			armPosition += armDelta;
 		}
 
-		if (gamepad1.left_bumper) {
+		if (gamepad1.b) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			armPosition -= armDelta;
