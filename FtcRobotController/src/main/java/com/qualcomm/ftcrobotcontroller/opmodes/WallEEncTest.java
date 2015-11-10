@@ -54,7 +54,7 @@ public class WallEEncTest extends OpMode {
 	final static double CLAW_MIN_RANGE  = 0.20;
 	final static double CLAW_MAX_RANGE  = 0.7;
 
-	final static float HILL_HOLD_POWER = 0.05f;
+	final static float HILL_HOLD_POWER = 0.11f;
 
 	// position of the arm servo.
 	double armPosition;
