@@ -41,7 +41,7 @@ import com.qualcomm.robotcore.util.Range;
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class WallEEncTest extends OpMode {
+public class WaletellopOld extends OpMode {
 
 	/*
 	 * Note: the configuration of the servos is such that
@@ -53,8 +53,6 @@ public class WallEEncTest extends OpMode {
 	final static double ARM_MAX_RANGE  = 1.0;
 	final static double CLAW_MIN_RANGE  = 0.20;
 	final static double CLAW_MAX_RANGE  = 0.7;
-
-	final static float HILL_HOLD_POWER = 0.11f;
 
 	// position of the arm servo.
 	double armPosition;
@@ -68,9 +66,6 @@ public class WallEEncTest extends OpMode {
 	// amount to change the claw servo position by
 	double clawDelta = 0.001;
 
-	// Hill holding brake set
-	boolean hillBrake = false;
-
 	DcMotor motorRight;
 	DcMotor motorLeft;
 	Servo claw;
@@ -79,7 +74,7 @@ public class WallEEncTest extends OpMode {
 	/**
 	 * Constructor
 	 */
-	public WallEEncTest() {
+	public WaletellopOld() {
 
 	}
 
@@ -111,11 +106,6 @@ public class WallEEncTest extends OpMode {
 		motorRight = hardwareMap.dcMotor.get("m1");
 		motorLeft = hardwareMap.dcMotor.get("m2");
 		motorLeft.setDirection(DcMotor.Direction.REVERSE);
-
-
-		// Test float vs non-float mode on motors
-		motorRight.setPowerFloat();
-		motorLeft.setPower(0.0f);
 
 		arm = hardwareMap.servo.get("s1");
 		// claw = hardwareMap.servo.get("servo_6");
@@ -163,26 +153,10 @@ public class WallEEncTest extends OpMode {
 
 		// scale the joystick value to make it easier to control
 		// the robot more precisely at slower speeds.
-		//right = (float)scaleInput(right);
-		//left =  (float)scaleInput(left);
-		right = (float)smoothPowerCurve(deadzone(right,0.10));
-		left = (float)smoothPowerCurve(deadzone(left,0.10));
-
-
-		// Check if hill hold brake set
-		if (gamepad1.right_bumper) {
-			// Hill holder is pushed -- Force motor power to at lesat hill holding
-			hillBrake = true;
-		}
-
-
-		if (hillBrake && Math.abs(right) < 0.05 && Math.abs(left) < 0.05){
-			right = HILL_HOLD_POWER;
-			left = HILL_HOLD_POWER;
-		}
-		else {
-			hillBrake = false;
-		}
+		right = (float)scaleInput(right);
+		left =  (float)scaleInput(left);
+		//right = (float)smoothPowerCurve(deadzone(right,0.10));
+		//left = (float)smoothPowerCurve(deadzone(left,0.10));
 
 
 		motorRight.setPower(right);
@@ -193,13 +167,13 @@ public class WallEEncTest extends OpMode {
 
 
 		// update the position of the arm.
-		if (gamepad1.a) {
+		if (gamepad1.right_bumper) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			armPosition += armDelta;
 		}
 
-		if (gamepad1.b) {
+		if (gamepad1.left_bumper) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			armPosition -= armDelta;
@@ -285,13 +259,13 @@ public class WallEEncTest extends OpMode {
 	protected double smoothPowerCurve (double x) {
 		//double a = this.getThrottle();
 		double a = 1.0;         // Hard code to max smoothing
-		double b = 0.05;		// Min power to overcome motor stall
+		double b = 0.15;
 
 		if (x > 0.0)
-			return (b + (1.0-b)*(a*x*x*x+(1.0-a)*x));
+			return ((b + (1.0-b))*(a*x*x*x+(1.0-a)*x));
 
 		else if (x<0.0)
-			return (-b + (1.0-b)*(a*x*x*x+(1.0-a)*x));
+			return ((-b + (1.0-b))*(a*x*x*x+(1.0-a)*x));
 		else return 0.0;
 	}
 

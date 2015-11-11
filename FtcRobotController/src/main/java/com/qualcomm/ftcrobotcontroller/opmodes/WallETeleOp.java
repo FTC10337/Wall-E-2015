@@ -35,13 +35,14 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 /**
  * TeleOp Mode
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class WallETeleOp extends OpMode {
+public class WallETeleop extends OpMode {
 
 	/*
 	 * Note: the configuration of the servos is such that
@@ -51,30 +52,50 @@ public class WallETeleOp extends OpMode {
 	// TETRIX VALUES.
 	final static double ARM_MIN_RANGE  = 0.0;
 	final static double ARM_MAX_RANGE  = 1.0;
-	final static double CLAW_MIN_RANGE  = 0.20;
-	final static double CLAW_MAX_RANGE  = 0.7;
+	final static double DUMP_MIN = 0.0;
+	final static double DUMP_MAX = 1.0;
+	final static double RZIP_MIN = 0.0;
+	final static double RZIP_MAX = 1.0;
+	final static double LZIP_MIN = 0.0;
+	final static double LZIP_MAX = 1.0;
+
+	
+	final static float HILL_HOLD_POWER = -0.11f;
 
 	// position of the arm servo.
 	double armPosition;
+	double rZipPosition;
+	double lZipPosition;
+	double dumpPosition;
 
 	// amount to change the arm servo position.
-	double armDelta = 0.005;
+	final static double SOL_DELTA = 0.005;
 
-	// position of the claw servo
-	double clawPosition;
 
 	// amount to change the claw servo position by
 	double clawDelta = 0.001;
 
+	// Hill holding brake set
+	boolean hillBrake = false;
+
+	boolean driveFwd = true;
+
 	DcMotor motorRight;
 	DcMotor motorLeft;
-	Servo claw;
-	Servo arm;
+	DcMotor motorArm;
+	DcMotor motorAccum;
+
+	Servo oldArm;
+	Servo dumper;
+	Servo rZip;
+	Servo lZip;
+
+	TouchSensor armLimit;
 
 	/**
 	 * Constructor
 	 */
-	public WallETeleOp() {
+	public WallETeleop() {
 
 	}
 
@@ -106,15 +127,28 @@ public class WallETeleOp extends OpMode {
 		motorRight = hardwareMap.dcMotor.get("m1");
 		motorLeft = hardwareMap.dcMotor.get("m2");
 		motorLeft.setDirection(DcMotor.Direction.REVERSE);
+		motorAccum = hardwareMap.dcMotor.get("m3");
+		motorArm = hardwareMap.dcMotor.get("m4");
 
-		arm = hardwareMap.servo.get("s1");
-		// claw = hardwareMap.servo.get("servo_6");
 
-		// touch = hardwareMap.touchSensor.get("touch_1");
+		// Test float vs non-float mode on motors
+		motorRight.setPowerFloat();
+		motorLeft.setPower(0.0f);
+
+		oldArm = hardwareMap.servo.get("s1");
+		dumper = hardwareMap.servo.get("s2");
+		rZip = hardwareMap.servo.get("s3");
+		lZip = hardwareMap.servo.get("s4");
+
+		armLimit = hardwareMap.touchSensor.get("t1");
 
 		// assign the starting position of the wrist and claw
 		armPosition = 0.0;
-		clawPosition = 0.2;
+		dumpPosition = 0.0;
+		rZipPosition = 0.0;
+		lZipPosition = 0.0;
+
+		driveFwd = true;
 	}
 
 	/*
@@ -139,12 +173,19 @@ public class WallETeleOp extends OpMode {
 		float throttle = -gamepad1.left_stick_y;
 		float direction = gamepad1.right_stick_x;
 
+		if (gamepad1.right_bumper){
+			driveFwd = true;
+		}else if (gamepad1.left_bumper){
+			driveFwd = false;
+		}
+
+		if (!driveFwd){
+			throttle = -1.0f * throttle;
+		}
+
 		float right = throttle - direction;
 		float left = throttle + direction;
 
-		// Pure tank drive
-		// float right = -gamepad1.right_stick_y;
-		// float left = -gamepad1.left_stick_y;
 
 
 		// clip the right/left values so that the values never exceed +/- 1
@@ -153,10 +194,26 @@ public class WallETeleOp extends OpMode {
 
 		// scale the joystick value to make it easier to control
 		// the robot more precisely at slower speeds.
-		right = (float)scaleInput(right);
-		left =  (float)scaleInput(left);
-		//right = (float)smoothPowerCurve(deadzone(right,0.10));
-		//left = (float)smoothPowerCurve(deadzone(left,0.10));
+		//right = (float)scaleInput(right);
+		//left =  (float)scaleInput(left);
+		right = (float)smoothPowerCurve(deadzone(right,0.10));
+		left = (float)smoothPowerCurve(deadzone(left,0.10));
+
+
+		// Check if hill hold brake set
+		if (gamepad1.b) {
+			// Hill holder is pushed -- Force motor power to at lesat hill holding
+			hillBrake = true;
+		}
+
+
+		if (hillBrake && Math.abs(right) < 0.05 && Math.abs(left) < 0.05){
+			right = HILL_HOLD_POWER;
+			left = HILL_HOLD_POWER;
+		}
+		else {
+			hillBrake = false;
+		}
 
 
 		motorRight.setPower(right);
@@ -167,34 +224,55 @@ public class WallETeleOp extends OpMode {
 
 
 		// update the position of the arm.
-		if (gamepad1.right_bumper) {
+		if (gamepad2.right_bumper) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
-			armPosition += armDelta;
+			armPosition += SOL_DELTA;
 		}
 
-		if (gamepad1.left_bumper) {
+		if (gamepad2.left_bumper) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
-			armPosition -= armDelta;
+			armPosition -= SOL_DELTA;
 		}
 
-		// update the position of the claw
-		if (gamepad1.x) {
-			clawPosition += clawDelta;
+		if (gamepad2.right_stick_x >0.2) {
+			// if the A button is pushed on gamepad1, increment the position of
+			// the arm servo.
+			rZipPosition -= SOL_DELTA;
 		}
 
-		if (gamepad1.b) {
-			clawPosition -= clawDelta;
+		if (gamepad2.right_stick_y >  0.2) {
+			// if the Y button is pushed on gamepad1, decrease the position of
+			// the arm servo.
+			rZipPosition += SOL_DELTA;
 		}
+
+		if (gamepad2.right_stick_x < -0.2) {
+			// if the A button is pushed on gamepad1, increment the position of
+			// the arm servo.
+			lZipPosition += SOL_DELTA;
+		}
+
+		if (gamepad2.right_stick_y >  0.2) {
+			// if the Y button is pushed on gamepad1, decrease the position of
+			// the arm servo.
+			lZipPosition -= SOL_DELTA;
+		}
+
 
 		// clip the position values so that they never exceed their allowed range.
 		armPosition = Range.clip(armPosition, ARM_MIN_RANGE, ARM_MAX_RANGE);
-		clawPosition = Range.clip(clawPosition, CLAW_MIN_RANGE, CLAW_MAX_RANGE);
+		dumpPosition = Range.clip(dumpPosition, DUMP_MIN, DUMP_MAX);
+		rZipPosition = Range.clip(rZipPosition, RZIP_MIN, RZIP_MAX);
+		lZipPosition = Range.clip(lZipPosition, LZIP_MIN, LZIP_MAX);
+
 
 		// write position values to the wrist and claw servo
-		arm.setPosition(armPosition);
-		// claw.setPosition(clawPosition);
+		oldArm.setPosition(armPosition);
+		dumper.setPosition(dumpPosition);
+		rZip.setPosition(rZipPosition);
+		lZip.setPosition(lZipPosition);
 
 
 
@@ -206,7 +284,6 @@ public class WallETeleOp extends OpMode {
 		 */
 		telemetry.addData("Text", "*** Robot Data***");
 		telemetry.addData("arm", "arm:  " + String.format("%.2f", armPosition));
-		telemetry.addData("claw", "claw:  " + String.format("%.2f", clawPosition));
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
 
@@ -259,13 +336,13 @@ public class WallETeleOp extends OpMode {
 	protected double smoothPowerCurve (double x) {
 		//double a = this.getThrottle();
 		double a = 1.0;         // Hard code to max smoothing
-		double b = 0.15;
+		double b = 0.05;		// Min power to overcome motor stall
 
 		if (x > 0.0)
-			return ((b + (1.0-b))*(a*x*x*x+(1.0-a)*x));
+			return (b + (1.0-b)*(a*x*x*x+(1.0-a)*x));
 
 		else if (x<0.0)
-			return ((-b + (1.0-b))*(a*x*x*x+(1.0-a)*x));
+			return (-b + (1.0-b)*(a*x*x*x+(1.0-a)*x));
 		else return 0.0;
 	}
 
