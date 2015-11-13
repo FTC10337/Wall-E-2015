@@ -60,7 +60,7 @@ public class WallETeleop extends OpMode {
 	final static double LZIP_MAX = 1.0;
 
 	
-	final static float HILL_HOLD_POWER = -0.11f;
+	final static float HILL_HOLD_POWER = -0.15f;
 
 	// position of the arm servo.
 	double armPosition;
@@ -70,6 +70,7 @@ public class WallETeleop extends OpMode {
 
 	// amount to change the arm servo position.
 	final static double SOL_DELTA = 0.005;
+	final static double ZIP_DELTA = 0.010;
 
 
 	// amount to change the claw servo position by
@@ -145,7 +146,7 @@ public class WallETeleop extends OpMode {
 		// assign the starting position of the wrist and claw
 		armPosition = 0.0;
 		dumpPosition = 0.0;
-		rZipPosition = 0.0;
+		rZipPosition = 1.0;
 		lZipPosition = 0.0;
 
 		driveFwd = true;
@@ -239,25 +240,25 @@ public class WallETeleop extends OpMode {
 		if (gamepad2.right_stick_x >0.2) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
-			rZipPosition -= SOL_DELTA;
+			rZipPosition -= ZIP_DELTA;
 		}
 
 		if (gamepad2.right_stick_y >  0.2) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
-			rZipPosition += SOL_DELTA;
+			rZipPosition += ZIP_DELTA;
 		}
 
 		if (gamepad2.right_stick_x < -0.2) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
-			lZipPosition += SOL_DELTA;
+			lZipPosition += ZIP_DELTA;
 		}
 
 		if (gamepad2.right_stick_y >  0.2) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
-			lZipPosition -= SOL_DELTA;
+			lZipPosition -= ZIP_DELTA;
 		}
 
 
