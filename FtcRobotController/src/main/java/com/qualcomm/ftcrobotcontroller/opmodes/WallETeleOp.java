@@ -128,8 +128,8 @@ public class WallETeleop extends OpMode {
 		motorRight = hardwareMap.dcMotor.get("m1");
 		motorLeft = hardwareMap.dcMotor.get("m2");
 		motorLeft.setDirection(DcMotor.Direction.REVERSE);
-		motorAccum = hardwareMap.dcMotor.get("m3");
-		motorArm = hardwareMap.dcMotor.get("m4");
+		//motorAccum = hardwareMap.dcMotor.get("m3");
+		//motorArm = hardwareMap.dcMotor.get("m4");
 
 
 		// Test float vs non-float mode on motors
@@ -141,7 +141,7 @@ public class WallETeleop extends OpMode {
 		rZip = hardwareMap.servo.get("s3");
 		lZip = hardwareMap.servo.get("s4");
 
-		armLimit = hardwareMap.touchSensor.get("t1");
+		//armLimit = hardwareMap.touchSensor.get("t1");
 
 		// assign the starting position of the wrist and claw
 		armPosition = 0.0;
@@ -284,7 +284,8 @@ public class WallETeleop extends OpMode {
 		 * are currently write only.
 		 */
 		telemetry.addData("Text", "*** Robot Data***");
-		telemetry.addData("arm", "arm:  " + String.format("%.2f", armPosition));
+		telemetry.addData("LZip", "LZip:  " + String.format("%.2f", lZipPosition));
+		telemetry.addData("RZip", "Rzip:  " + String.format("%.2f", 1.0f - rZipPosition));
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
 
