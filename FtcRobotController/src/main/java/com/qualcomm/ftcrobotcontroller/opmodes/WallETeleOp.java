@@ -52,12 +52,12 @@ public class WallETeleOp extends OpMode {
 	// TETRIX VALUES.
 	final static double ARM_MIN_RANGE  = 0.0;
 	final static double ARM_MAX_RANGE  = 1.0;
-	final static double DUMP_MIN = 0.0;
-	final static double DUMP_MAX = 1.0;
-	final static double RZIP_MIN = 0.0;
-	final static double RZIP_MAX = 1.0;
+	final static double DUMP_MIN = 0.41;
+	final static double DUMP_MAX = 0.75;
+	final static double RZIP_MIN = 0.25;
+	final static double RZIP_MAX = 1.00;
 	final static double LZIP_MIN = 0.0;
-	final static double LZIP_MAX = 1.0;
+	final static double LZIP_MAX = 0.75;
 
 	
 	final static float HILL_HOLD_POWER = -0.15f;
@@ -305,7 +305,7 @@ public class WallETeleOp extends OpMode {
 		// Cheak if limit switch is pressed
 		if (armLimit.isPressed()) {
 			// if touch sensor is pushed the motor will stop going in that direction
-			armStick =  Range.clip(armStick, 0, 1);
+			armStick =  Range.clip(armStick, -1, 0);
 		}
 
 
