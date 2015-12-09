@@ -145,7 +145,7 @@ public class WallETeleOp extends OpMode {
 
 		// assign the starting position of the wrist and claw
 		armPosition = 0.0;
-		dumpPosition = 0.0;
+		dumpPosition = 0.59;
 		rZipPosition = 1.0;
 		lZipPosition = 0.0;
 
