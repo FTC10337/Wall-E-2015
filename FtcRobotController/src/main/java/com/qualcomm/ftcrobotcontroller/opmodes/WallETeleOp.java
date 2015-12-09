@@ -71,7 +71,7 @@ public class WallETeleOp extends OpMode {
 	// amount to change the arm servo position.
 	final static double SOL_DELTA = 0.005;
 	final static double ZIP_DELTA = 0.010;
-
+	final static double DUMP_DELTA = 0.01;
 
 	// amount to change the claw servo position by
 	double clawDelta = 0.001;
@@ -128,8 +128,8 @@ public class WallETeleOp extends OpMode {
 		motorRight = hardwareMap.dcMotor.get("m1");
 		motorLeft = hardwareMap.dcMotor.get("m2");
 		motorLeft.setDirection(DcMotor.Direction.REVERSE);
-		//motorAccum = hardwareMap.dcMotor.get("m3");
-		//motorArm = hardwareMap.dcMotor.get("m4");
+		motorAccum = hardwareMap.dcMotor.get("m3");
+		motorArm = hardwareMap.dcMotor.get("m4");
 
 
 		// Test float vs non-float mode on motors
@@ -141,7 +141,7 @@ public class WallETeleOp extends OpMode {
 		rZip = hardwareMap.servo.get("s3");
 		lZip = hardwareMap.servo.get("s4");
 
-		//armLimit = hardwareMap.touchSensor.get("t1");
+		armLimit = hardwareMap.touchSensor.get("t1");
 
 		// assign the starting position of the wrist and claw
 		armPosition = 0.0;
@@ -261,7 +261,17 @@ public class WallETeleOp extends OpMode {
 			lZipPosition -= ZIP_DELTA;
 		}
 
+		if (gamepad2.dpad_left) {
+			// if the A button is pushed on gamepad1, increment the position of
+			// the arm servo.
+			dumpPosition += DUMP_DELTA;
+		}
 
+		if (gamepad2.dpad_right) {
+			// if the Y button is pushed on gamepad1, decrease the position of
+			// the arm servo.
+			dumpPosition -= DUMP_DELTA;
+		}
 		// clip the position values so that they never exceed their allowed range.
 		armPosition = Range.clip(armPosition, ARM_MIN_RANGE, ARM_MAX_RANGE);
 		dumpPosition = Range.clip(dumpPosition, DUMP_MIN, DUMP_MAX);
