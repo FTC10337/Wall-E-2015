@@ -285,6 +285,32 @@ public class WallETeleOp extends OpMode {
 		rZip.setPosition(rZipPosition);
 		lZip.setPosition(lZipPosition);
 
+		float armStick = -gamepad2.left_stick_y;
+
+
+
+
+
+
+		// clip the right/left values so that the values never exceed +/- 1
+		armStick = Range.clip(armStick, -1, 1);
+
+		// scale the joystick value to make it easier to control
+		// the robot more precisely at slower speeds.
+		//right = (float)scaleInput(right);
+		//left =  (float)scaleInput(left);
+		armStick = (float)smoothPowerCurve(deadzone(armStick,0.10));
+
+
+		// Cheak if limit switch is pressed
+		if (armLimit.isPressed()) {
+			// if touch sensor is pushed the motor will stop going in that direction
+			armStick =  Range.clip(armStick, 0, 1);
+		}
+
+
+
+		motorArm.setPower(armStick);
 
 
 		/*
@@ -298,7 +324,7 @@ public class WallETeleOp extends OpMode {
 		telemetry.addData("RZip", "Rzip:  " + String.format("%.2f", 1.0f - rZipPosition));
 		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
 		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
-
+		telemetry.addData("dumper", "dumper: "  + String.format("%.2f", dumpPosition));
 	}
 
 	/*
