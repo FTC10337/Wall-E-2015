@@ -42,7 +42,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
  * <p>
  * Enables control of the robot via the gamepad
  */
-public class WallETeleop extends OpMode {
+public class WallETeleOp extends OpMode {
 
 	/*
 	 * Note: the configuration of the servos is such that
@@ -96,7 +96,7 @@ public class WallETeleop extends OpMode {
 	/**
 	 * Constructor
 	 */
-	public WallETeleop() {
+	public WallETeleOp() {
 
 	}
 
