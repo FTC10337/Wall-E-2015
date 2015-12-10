@@ -40,13 +40,26 @@ public class WallEAutoMoveToGoal extends LinearOpMode {
 
         wait(2000);     // Drive for 2 seconds
 
+        // Stop and wait for coast
+        motorLeft.setPower(0.0);
+        motorRight.setPower(0.0);
+        wait(500);
+
         // Turn left
         motorLeft.setPower(-0.5);
+        motorRight.setPower(0.5);
 
         wait(500);     // Turn for 1/2 second
 
+        motorLeft.setPower(0.0);
+        motorRight.setPower(0.0);
+
+        wait(500);
+
+
         // Drive forward
         motorLeft.setPower(0.5);
+        motorRight.setPower(0.5);
 
         wait(2000);
 
