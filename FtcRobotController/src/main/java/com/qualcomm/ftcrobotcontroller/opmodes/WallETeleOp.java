@@ -44,12 +44,8 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
  */
 public class WallETeleOp extends OpMode {
 
-	/*
-	 * Note: the configuration of the servos is such that
-	 * as the arm servo approaches 0, the arm position moves up (away from the floor).
-	 * Also, as the claw servo approaches 0, the claw opens up (drops the game element).
-	 */
-	// TETRIX VALUES.
+
+	// Constants for Servo min and max postions
 	final static double ARM_MIN_RANGE  = 0.0;
 	final static double ARM_MAX_RANGE  = 1.0;
 	final static double DUMP_MIN = 0.41;
@@ -59,8 +55,18 @@ public class WallETeleOp extends OpMode {
 	final static double LZIP_MIN = 0.0;
 	final static double LZIP_MAX = 0.75;
 
-	
+
+	// Constants for servo starting positions
+	final static double ARM_INIT = 0.0;
+	final static double RZIP_INIT = 1.0;
+	final static double LZIP_INIT = 0.0;
+	final static double DUMP_INIT = 0.59;
+
+	// Constant for drive train hill holding
 	final static float HILL_HOLD_POWER = -0.15f;
+
+	// Constant for accumulator motor power
+	final static double ACCUM_SPEED = 0.50;
 
 	// position of the arm servo.
 	double armPosition;
@@ -68,29 +74,30 @@ public class WallETeleOp extends OpMode {
 	double lZipPosition;
 	double dumpPosition;
 
-	// amount to change the arm servo position.
+	// Constant amount to change the servo position.
 	final static double SOL_DELTA = 0.005;
 	final static double ZIP_DELTA = 0.010;
 	final static double DUMP_DELTA = 0.01;
 
-	// amount to change the claw servo position by
-	double clawDelta = 0.001;
-
 	// Hill holding brake set
 	boolean hillBrake = false;
 
+	// Which direction are we driving?
 	boolean driveFwd = true;
 
+	// Define our hardware -- motors
 	DcMotor motorRight;
 	DcMotor motorLeft;
 	DcMotor motorArm;
 	DcMotor motorAccum;
 
-	Servo oldArm;
+	// Define our hardware -- servos
+	Servo oldArm;	// This arm is not there anymore but we left code intact
 	Servo dumper;
 	Servo rZip;
 	Servo lZip;
 
+	// Define our hardware -- limit switch for main arm
 	TouchSensor armLimit;
 
 	/**
@@ -115,26 +122,13 @@ public class WallETeleOp extends OpMode {
 		 * configured your robot and created the configuration file.
 		 */
 		
-		/*
-		 * For the demo Tetrix K9 bot we assume the following,
-		 *   There are two motors "motor_1" and "motor_2"
-		 *   "motor_1" is on the right side of the bot.
-		 *   "motor_2" is on the left side of the bot and reversed.
-		 *   
-		 * We also assume that there are two servos "servo_1" and "servo_6"
-		 *    "servo_1" controls the arm joint of the manipulator.
-		 *    "servo_6" controls the claw joint of the manipulator.
-		 */
+
+		// Initialize all the hardware objects to real hardware instances
 		motorRight = hardwareMap.dcMotor.get("m1");
 		motorLeft = hardwareMap.dcMotor.get("m2");
 		motorLeft.setDirection(DcMotor.Direction.REVERSE);
 		motorAccum = hardwareMap.dcMotor.get("m3");
 		motorArm = hardwareMap.dcMotor.get("m4");
-
-
-		// Test float vs non-float mode on motors
-		motorRight.setPowerFloat();
-		motorLeft.setPower(0.0f);
 
 		oldArm = hardwareMap.servo.get("s1");
 		dumper = hardwareMap.servo.get("s2");
@@ -143,12 +137,13 @@ public class WallETeleOp extends OpMode {
 
 		armLimit = hardwareMap.touchSensor.get("t1");
 
-		// assign the starting position of the wrist and claw
-		armPosition = 0.0;
-		dumpPosition = 0.59;
-		rZipPosition = 1.0;
-		lZipPosition = 0.0;
+		// assign the starting position of the servos
+		armPosition = ARM_INIT;
+		dumpPosition = DUMP_INIT;
+		rZipPosition = RZIP_INIT;
+		lZipPosition = LZIP_INIT;
 
+		// Make sure we start off driving "forward" at each match
 		driveFwd = true;
 	}
 
@@ -160,34 +155,30 @@ public class WallETeleOp extends OpMode {
 	@Override
 	public void loop() {
 
-		/*
-		 * Gamepad 1
-		 * 
-		 * Gamepad 1 controls the motors via the left stick, and it controls the
-		 * wrist/claw via the a,b, x, y buttons
-		 */
 
-		// throttle: left_stick_y ranges from -1 to 1, where -1 is full up, and
-		// 1 is full down
-		// direction: left_stick_x ranges from -1 to 1, where -1 is full left
-		// and 1 is full right
+
+		// Drivetrain code beginning
+
+		// Left stick on pad1 is the throttle
+		// Right stick on pad1 is the left/right turning
 		float throttle = -gamepad1.left_stick_y;
 		float direction = gamepad1.right_stick_x;
 
+		// Read the switches to see if we are reversing the drive direction
 		if (gamepad1.right_bumper){
 			driveFwd = true;
 		}else if (gamepad1.left_bumper){
 			driveFwd = false;
 		}
 
+		// If we are driving in reverse we simply flip the throttle value
 		if (!driveFwd){
 			throttle = -1.0f * throttle;
 		}
 
+		// Convert throttle and direction into left/right motor values
 		float right = throttle - direction;
 		float left = throttle + direction;
-
-
 
 		// clip the right/left values so that the values never exceed +/- 1
 		right = Range.clip(right, -1, 1);
@@ -203,75 +194,78 @@ public class WallETeleOp extends OpMode {
 
 		// Check if hill hold brake set
 		if (gamepad1.b) {
-			// Hill holder is pushed -- Force motor power to at lesat hill holding
+			// Hill holder is pushed -- so we set flag to hillBrake mode
 			hillBrake = true;
 		}
 
 
 		if (hillBrake && Math.abs(right) < 0.05 && Math.abs(left) < 0.05){
+			// Hill brake is set and no joystick input so we hold hill
 			right = HILL_HOLD_POWER;
 			left = HILL_HOLD_POWER;
 		}
 		else {
+			// Turn off the brake -- either its already off or joystick has throttle
 			hillBrake = false;
 		}
 
-
+		// Finally we set the drive motors to appropriate values
 		motorRight.setPower(right);
 		motorLeft.setPower(left);
 
+		// End of drivetrain <code></code>
 
 
 
 
-		// update the position of the arm.
+		// Servo code for all of the servos on robot
+
+		// "Old" arm position servo -- dumper for climbers into shelter
 		if (gamepad2.right_bumper) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			armPosition += SOL_DELTA;
 		}
-
 		if (gamepad2.left_bumper) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			armPosition -= SOL_DELTA;
 		}
 
+		// Stick inputs for zipline tools
 		if (gamepad2.right_stick_x >0.2) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			rZipPosition -= ZIP_DELTA;
 		}
-
 		if (gamepad2.right_stick_y >  0.2) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			rZipPosition += ZIP_DELTA;
 		}
-
 		if (gamepad2.right_stick_x < -0.2) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			lZipPosition += ZIP_DELTA;
 		}
-
 		if (gamepad2.right_stick_y >  0.2) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			lZipPosition -= ZIP_DELTA;
 		}
 
+		// Main arm dumper servo position
 		if (gamepad2.dpad_left) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			dumpPosition += DUMP_DELTA;
 		}
-
 		if (gamepad2.dpad_right) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			dumpPosition -= DUMP_DELTA;
 		}
+
 		// clip the position values so that they never exceed their allowed range.
 		armPosition = Range.clip(armPosition, ARM_MIN_RANGE, ARM_MAX_RANGE);
 		dumpPosition = Range.clip(dumpPosition, DUMP_MIN, DUMP_MAX);
@@ -279,28 +273,23 @@ public class WallETeleOp extends OpMode {
 		lZipPosition = Range.clip(lZipPosition, LZIP_MIN, LZIP_MAX);
 
 
-		// write position values to the wrist and claw servo
+		// write position values to the servos
 		oldArm.setPosition(armPosition);
 		dumper.setPosition(dumpPosition);
 		rZip.setPosition(rZipPosition);
 		lZip.setPosition(lZipPosition);
 
+
+
+		// Code for moving the main arm
+
+		// Read joystick value and range limit it
 		float armStick = -gamepad2.left_stick_y;
-
-
-
-
-
-
-		// clip the right/left values so that the values never exceed +/- 1
 		armStick = Range.clip(armStick, -1, 1);
 
 		// scale the joystick value to make it easier to control
 		// the robot more precisely at slower speeds.
-		//right = (float)scaleInput(right);
-		//left =  (float)scaleInput(left);
 		armStick = (float)smoothPowerCurve(deadzone(armStick,0.10));
-
 
 		// Cheak if limit switch is pressed
 		if (armLimit.isPressed()) {
@@ -308,9 +297,30 @@ public class WallETeleOp extends OpMode {
 			armStick =  Range.clip(armStick, -1, 0);
 		}
 
-
-
+		// And power the motor
 		motorArm.setPower(armStick);
+
+		// End of main arm
+
+
+		// Code for the accumulator motor
+
+		// Read the control buttons and set motor
+		if (gamepad2.a) {
+			// Turn accumulator on in feed in direction
+			motorAccum.setPower(ACCUM_SPEED);
+		}
+		else if (gamepad2.y) {
+			// Turn accumulator on in feed out direction
+			motorAccum.setPower((-ACCUM_SPEED));
+		}
+		else if (gamepad2.b) {
+			// Stop the accumulator
+			motorAccum.setPower(0.0);
+		}
+
+		// End of accumulator code
+
 
 
 		/*
@@ -319,11 +329,11 @@ public class WallETeleOp extends OpMode {
 		 * will return a null value. The legacy NXT-compatible motor controllers
 		 * are currently write only.
 		 */
-		telemetry.addData("Text", "*** Robot Data***");
+		// telemetry.addData("Text", "*** Robot Data***");
 		telemetry.addData("LZip", "LZip:  " + String.format("%.2f", lZipPosition));
 		telemetry.addData("RZip", "Rzip:  " + String.format("%.2f", 1.0f - rZipPosition));
-		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
-		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
+		// telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
+		// telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
 		telemetry.addData("dumper", "dumper: "  + String.format("%.2f", dumpPosition));
 	}
 
