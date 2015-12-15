@@ -50,10 +50,10 @@ public class WallETeleOp extends OpMode {
 	final static double ARM_MAX_RANGE  = 1.0;
 	final static double DUMP_MIN = 0.41;
 	final static double DUMP_MAX = 0.75;
-	final static double RZIP_MIN = 0.25;
+	final static double RZIP_MIN = 0.0;
 	final static double RZIP_MAX = 1.00;
 	final static double LZIP_MIN = 0.0;
-	final static double LZIP_MAX = 0.75;
+	final static double LZIP_MAX = 1.00;
 
 
 	// Constants for servo starting positions
@@ -63,10 +63,10 @@ public class WallETeleOp extends OpMode {
 	final static double DUMP_INIT = 0.59;
 
 	// Constant for drive train hill holding
-	final static float HILL_HOLD_POWER = -0.15f;
+	final static float HILL_HOLD_POWER = -0.20f;
 
 	// Constant for accumulator motor power
-	final static double ACCUM_SPEED = 0.50;
+	double ACCUM_SPEED = 0.0;
 
 	// position of the arm servo.
 	double armPosition;
@@ -193,7 +193,7 @@ public class WallETeleOp extends OpMode {
 
 
 		// Check if hill hold brake set
-		if (gamepad1.b) {
+		if (gamepad1.x) {
 			// Hill holder is pushed -- so we set flag to hillBrake mode
 			hillBrake = true;
 		}
@@ -233,22 +233,22 @@ public class WallETeleOp extends OpMode {
 		}
 
 		// Stick inputs for zipline tools
-		if (gamepad2.right_stick_x >0.2) {
+		if (gamepad1.right_trigger >0.2) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			rZipPosition -= ZIP_DELTA;
 		}
-		if (gamepad2.right_stick_y >  0.2) {
+		if (gamepad1.dpad_down ) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			rZipPosition += ZIP_DELTA;
 		}
-		if (gamepad2.right_stick_x < -0.2) {
+		if (gamepad1.left_trigger > 0.2) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			lZipPosition += ZIP_DELTA;
 		}
-		if (gamepad2.right_stick_y >  0.2) {
+		if (gamepad1.dpad_down ) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
 			lZipPosition -= ZIP_DELTA;
@@ -265,7 +265,11 @@ public class WallETeleOp extends OpMode {
 			// the arm servo.
 			dumpPosition -= DUMP_DELTA;
 		}
-
+		if (gamepad2.dpad_down) {
+			// if the Y button is pushed on gamepad1, decrease the position of
+			// the arm servo.
+			dumpPosition = 0.59;
+		}
 		// clip the position values so that they never exceed their allowed range.
 		armPosition = Range.clip(armPosition, ARM_MIN_RANGE, ARM_MAX_RANGE);
 		dumpPosition = Range.clip(dumpPosition, DUMP_MIN, DUMP_MAX);
@@ -284,7 +288,7 @@ public class WallETeleOp extends OpMode {
 		// Code for moving the main arm
 
 		// Read joystick value and range limit it
-		float armStick = -gamepad2.left_stick_y;
+		float armStick = gamepad2.left_stick_y;
 		armStick = Range.clip(armStick, -1, 1);
 
 		// scale the joystick value to make it easier to control
@@ -306,19 +310,19 @@ public class WallETeleOp extends OpMode {
 		// Code for the accumulator motor
 
 		// Read the control buttons and set motor
-		if (gamepad2.a) {
+		if (gamepad1.a) {
 			// Turn accumulator on in feed in direction
-			motorAccum.setPower(ACCUM_SPEED);
+			ACCUM_SPEED = 1.0;
 		}
-		else if (gamepad2.y) {
+		else if (gamepad1.y) {
 			// Turn accumulator on in feed out direction
-			motorAccum.setPower((-ACCUM_SPEED));
+			ACCUM_SPEED = -1.0;
 		}
-		else if (gamepad2.b) {
+		else if (gamepad1.b) {
 			// Stop the accumulator
-			motorAccum.setPower(0.0);
+			ACCUM_SPEED = 0.0;
 		}
-
+		motorAccum.setPower(ACCUM_SPEED);
 		// End of accumulator code
 
 
@@ -332,8 +336,7 @@ public class WallETeleOp extends OpMode {
 		// telemetry.addData("Text", "*** Robot Data***");
 		telemetry.addData("LZip", "LZip:  " + String.format("%.2f", lZipPosition));
 		telemetry.addData("RZip", "Rzip:  " + String.format("%.2f", 1.0f - rZipPosition));
-		// telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
-		// telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
+		telemetry.addData("accum",  "accum: " + String.format("%.2f", ACCUM_SPEED));
 		telemetry.addData("dumper", "dumper: "  + String.format("%.2f", dumpPosition));
 	}
 

@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
  * will drive in a square pattern using sleep()
  * and a for loop.
  */
-public class WallEAutoMoveToGoal extends LinearOpMode {
+public class WallEAutoMoveLeftTurn extends LinearOpMode {
 
     // Define our hardware -- motors
     DcMotor motorRight;
@@ -31,6 +31,9 @@ public class WallEAutoMoveToGoal extends LinearOpMode {
 
         waitForStart();
 
+        // Wait for 10 second interval before moving
+        sleep(10000);
+
         // Set the accumulator to out
         motorAccum.setPower(-ACCUM_SPEED);
 
@@ -38,30 +41,30 @@ public class WallEAutoMoveToGoal extends LinearOpMode {
         motorLeft.setPower(0.5);
         motorRight.setPower(0.5);
 
-        wait(2000);     // Drive for 2 seconds
+        sleep(2200);     // Drive for 2 seconds
 
         // Stop and wait for coast
         motorLeft.setPower(0.0);
         motorRight.setPower(0.0);
-        wait(500);
+        sleep(500);
 
-        // Turn left
-        motorLeft.setPower(-0.5);
-        motorRight.setPower(0.5);
+        // Turn left (redblue returns 1.0)
+        motorLeft.setPower(redblue() * -0.8);
+        motorRight.setPower(redblue() * 0.8);
 
-        wait(500);     // Turn for 1/2 second
+        sleep(1000);     // Turn for 1/2 second
 
         motorLeft.setPower(0.0);
         motorRight.setPower(0.0);
 
-        wait(500);
+        sleep(500);
 
 
         // Drive forward
         motorLeft.setPower(0.5);
         motorRight.setPower(0.5);
 
-        wait(2000);
+        sleep(1600);
 
         // and we are done
         motorLeft.setPower(0.0);
@@ -69,5 +72,9 @@ public class WallEAutoMoveToGoal extends LinearOpMode {
         motorAccum.setPower(0.0);
     }
 
+
+    double redblue() {
+        return 1.0;
+    }
 
 }
