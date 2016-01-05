@@ -63,7 +63,7 @@ public class WallETeleOp extends OpMode {
 	final static double DUMP_INIT = 0.59;
 
 	// Constant for drive train hill holding
-	final static float HILL_HOLD_POWER = -0.20f;
+	final static float HILL_HOLD_POWER = -0.25f;
 
 	// Constant for accumulator motor power
 	double ACCUM_SPEED = 0.0;
