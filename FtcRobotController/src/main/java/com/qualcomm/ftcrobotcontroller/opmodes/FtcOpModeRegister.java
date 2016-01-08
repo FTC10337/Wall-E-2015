@@ -64,6 +64,7 @@ public class FtcOpModeRegister implements OpModeRegister {
     //manager.register ("PushBotManual", PushBotManual.class);
     manager.register("WallEAutoMoveLeftTurn", WallEAutoMoveLeftTurn.class);
     manager.register("WallEAutoMoveRightTurn", WallEAutoMoveRightTurn.class);
+    manager.register("AutoEnc Test", WallEAutoMoveLeftTurnEnc.class);
 
 
 
