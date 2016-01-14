@@ -3,6 +3,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.Timer;
 
@@ -18,6 +19,7 @@ public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
     DcMotor motorLeft;
     DcMotor motorArm;
     DcMotor motorAccum;
+
 
     // Constant for accumulator motor power
     final static double ACCUM_SPEED = 0.50;
@@ -47,47 +49,30 @@ public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
         waitForStart();
 
         // Wait for 5 second interval before moving
-        // sleep(5000);
+        sleep(5000);
 
         // Set the accumulator to out
-        // motorAccum.setPower(-ACCUM_SPEED);
+        motorAccum.setPower(-ACCUM_SPEED);
 
         // Drive forward
-        driveToPosn(-10000, 10000);
+        driveToPosn(10000, 10000, 0.5, 5.0);
 
-        // Drive forward
-        //motorLeft.setPower(0.5);
-        //motorRight.setPower(0.5);
-
-       //sleep(2200);     // Drive for 2 seconds
-
-        // Stop and wait for coast
-        motorLeft.setPower(0.0);
-        motorRight.setPower(0.0);
+        // wait for coast
         sleep(500);
 
-        // Turn left (redblue returns 1.0)
-        //motorLeft.setPower(redblue() * -0.8);
-        //motorRight.setPower(redblue() * 0.8);
+        // Turn  (redblue returns 1.0 for left and -1 for right)
+        driveToPosn(redblue()*-5000, redblue()*5000, 1.0, 5.0);
 
-        //sleep(1000);     // Turn for 1/2 second
-
-        //motorLeft.setPower(0.0);
-        //motorRight.setPower(0.0);
-
-        //sleep(500);
-
+        // wait for coast
+        sleep(500);
 
         // Drive forward
-        //motorLeft.setPower(0.5);
-        //motorRight.setPower(0.5);
-
-        //sleep(1600);
+        driveToPosn(10000, 10000, 0.5, 5.0);
 
         // and we are done
-        //motorLeft.setPower(0.0);
-        //motorRight.setPower(0.0);
-        //motorAccum.setPower(0.0);
+        motorLeft.setPower(0.0);
+        motorRight.setPower(0.0);
+        motorAccum.setPower(0.0);
     }
 
 
@@ -134,9 +119,12 @@ public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
      *
      * Drive the specified RELATIVE distance left and right
      */
-    boolean driveToPosn(double left, double right)  throws InterruptedException {
+    boolean driveToPosn(double left, double right, double power, double timeout)  throws InterruptedException {
         double oldLeft = motorLeft.getCurrentPosition();
         double oldRight = motorRight.getCurrentPosition();
+
+        // Timer to make sure we dont get stuck
+        ElapsedTime timer = new ElapsedTime();
 
         // Calculate new absolute target position
         double newLeft = oldLeft - left; // Left is reversed
@@ -150,20 +138,27 @@ public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
         waitForNextHardwareCycle();
         waitForNextHardwareCycle();
 
-        telemetry.addData("LeftTgt", "LeftTgt: " +newLeft);
+        telemetry.addData("LeftTgt", "LeftTgt: " + newLeft);
         telemetry.addData("RtTgt", "RtTgt: " + newRight);
+
+        // Start timer now
+        timer.reset();
 
 
         // Set motor powers
-        motorLeft.setPower(0.5);
-        motorRight.setPower(0.5);
+        motorLeft.setPower(power);
+        motorRight.setPower(power);
 
-        while (!haveEncodersReached(newLeft, newRight)) {
+        while (!haveEncodersReached(newLeft, newRight) && timer.time() <= timeout) {
             // Do nothing
             telemetry.addData("LeftCur", "LeftCur: " + motorLeft.getCurrentPosition() );
             telemetry.addData("RtCur", "RtCur: " + motorRight.getCurrentPosition() );
 
         }
+
+        // Stop driving
+        motorLeft.setPower(0.0);
+        motorRight.setPower(0.0);
 
         return haveEncodersReached(newLeft, newRight);
     }
