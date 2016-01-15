@@ -33,6 +33,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -48,8 +49,8 @@ public class WallETeleOp extends OpMode {
 	// Constants for Servo min and max postions
 	final static double ARM_MIN_RANGE  = 0.0;
 	final static double ARM_MAX_RANGE  = 1.0;
-	final static double DUMP_MIN = 0.41;
-	final static double DUMP_MAX = 0.75;
+	final static double DUMP_MIN = 0.33;
+	final static double DUMP_MAX = 0.65;
 	final static double RZIP_MIN = 0.0;
 	final static double RZIP_MAX = 1.00;
 	final static double LZIP_MIN = 0.0;
@@ -60,7 +61,7 @@ public class WallETeleOp extends OpMode {
 	final static double ARM_INIT = 0.0;
 	final static double RZIP_INIT = 1.0;
 	final static double LZIP_INIT = 0.0;
-	final static double DUMP_INIT = 0.59;
+	final static double DUMP_INIT = 0.49;
 
 	// Constant for drive train hill holding
 	final static float HILL_HOLD_POWER = -0.25f;
@@ -77,7 +78,7 @@ public class WallETeleOp extends OpMode {
 	// Constant amount to change the servo position.
 	final static double SOL_DELTA = 0.005;
 	final static double ZIP_DELTA = 0.010;
-	final static double DUMP_DELTA = 0.01;
+	final static double DUMP_DELTA = 0.02;
 
 	// Hill holding brake set
 	boolean hillBrake = false;
@@ -129,6 +130,7 @@ public class WallETeleOp extends OpMode {
 		motorLeft.setDirection(DcMotor.Direction.REVERSE);
 		motorAccum = hardwareMap.dcMotor.get("m3");
 		motorArm = hardwareMap.dcMotor.get("m4");
+
 
 		oldArm = hardwareMap.servo.get("s1");
 		dumper = hardwareMap.servo.get("s2");
@@ -268,7 +270,7 @@ public class WallETeleOp extends OpMode {
 		if (gamepad2.dpad_down) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
-			dumpPosition = 0.59;
+			dumpPosition = 0.49;
 		}
 		// clip the position values so that they never exceed their allowed range.
 		armPosition = Range.clip(armPosition, ARM_MIN_RANGE, ARM_MAX_RANGE);
@@ -334,10 +336,13 @@ public class WallETeleOp extends OpMode {
 		 * are currently write only.
 		 */
 		// telemetry.addData("Text", "*** Robot Data***");
-		telemetry.addData("LZip", "LZip:  " + String.format("%.2f", lZipPosition));
-		telemetry.addData("RZip", "Rzip:  " + String.format("%.2f", 1.0f - rZipPosition));
-		telemetry.addData("accum",  "accum: " + String.format("%.2f", ACCUM_SPEED));
-		telemetry.addData("dumper", "dumper: "  + String.format("%.2f", dumpPosition));
+		//telemetry.addData("LZip", "LZip:  " + String.format("%.2f", lZipPosition));
+		//telemetry.addData("RZip", "Rzip:  " + String.format("%.2f", 1.0f - rZipPosition));
+		//telemetry.addData("accum",  "accum: " + String.format("%.2f", ACCUM_SPEED));
+		//telemetry.addData("dumper", "dumper: "  + String.format("%.2f", dumpPosition));
+		telemetry.addData("LeftCur", "LeftCur: " + motorLeft.getCurrentPosition() );
+		telemetry.addData("RtCur", "RtCur: " + motorRight.getCurrentPosition() );
+
 	}
 
 	/*

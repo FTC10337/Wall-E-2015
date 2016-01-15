@@ -5,14 +5,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import java.util.Timer;
-
 /*
  * An example linear op mode where the pushbot
  * will drive in a square pattern using sleep()
  * and a for loop.
  */
-public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
+public class WallEAutoMtnLeft extends LinearOpMode {
 
     // Define our hardware -- motors
     DcMotor motorRight;
@@ -59,20 +57,32 @@ public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
         // Set the accumulator to out
         motorAccum.setPower(-ACCUM_SPEED);
 
-        // Drive forward
+        // Drive forward 20 inches
         driveToPosn(2100, 2100, 0.5, 5.0);
 
         // wait for coast
         sleep(500);
 
-        // Turn  (redblue returns 1.0 for left and -1 for right)
-        driveToPosn(redblue()*-833, redblue()*833, 1.0, 10.0);
+        // Turn left 45 deg (redblue returns 1.0 for left and -1 for right)
+        driveToPosn(redblue()*-833, redblue()*833, 1.0, 5.0);
 
         // wait for coast
         sleep(500);
 
-        // Drive forward
-        driveToPosn(5800, 5800, 0.5, 5.0);
+        // Drive forward 8 inches
+        driveToPosn(1000, 1000, 0.5, 5.0);
+
+        // wait for coast
+        sleep(500);
+
+        // turn right 90 deg
+        driveToPosn(redblue()*1666,redblue()*-1666,1.0, 5.0);
+
+        // wait for coast
+        sleep (500);
+
+        // back onto mountain
+        driveToPosn(-1600, -1600, 0.5, 5.0);
 
         // and we are done
         motorLeft.setPower(0.0);
