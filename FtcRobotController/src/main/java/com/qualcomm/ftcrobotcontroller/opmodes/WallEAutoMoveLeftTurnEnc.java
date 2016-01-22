@@ -8,9 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.Timer;
 
 /*
- * An example linear op mode where the pushbot
- * will drive in a square pattern using sleep()
- * and a for loop.
+ * WallEAutoMoveLeftTurn
  */
 public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
 

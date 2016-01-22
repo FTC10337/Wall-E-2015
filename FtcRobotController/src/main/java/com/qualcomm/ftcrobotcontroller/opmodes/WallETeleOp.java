@@ -41,6 +41,9 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 /**
  * TeleOp Mode
  * <p>
+ *     Dark Matter
+ *     10337
+ *     MJH
  * Enables control of the robot via the gamepad
  */
 public class WallETeleOp extends OpMode {

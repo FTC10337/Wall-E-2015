@@ -57,15 +57,7 @@ public class FtcOpModeRegister implements OpModeRegister {
 
     manager.register("NullOp", NullOp.class);
 
-    //manager.register("MatrixK9TeleOp", MatrixK9TeleOp.class);
     manager.register("WallETeleop", WallETeleOp.class);
-    //manager.register("K9Line", K9Line.class);
-    //manager.register ("PushBotAuto", PushBotAuto.class);
-    //manager.register ("PushBotManual", PushBotManual.class);
-    //manager.register("WallEAutoMoveLeftTurn", WallEAutoMoveLeftTurn.class);
-    //manager.register("WallEAutoMoveRightTurn", WallEAutoMoveRightTurn.class);
-    manager.register("Auto Floor Left Turn", WallEAutoMoveLeftTurnEnc.class);
-    manager.register("Auto Floor Rt Turn", WallEAutoMoveRightTurnEnc.class);
     manager.register("Auto Mtn Left", WallEAutoMtnLeft.class);
     manager.register("Auto Mtn Rt", WallEAutoMtnRight.class);
 
@@ -73,6 +65,9 @@ public class FtcOpModeRegister implements OpModeRegister {
     /*
      * Uncomment any of the following lines if you want to register an op mode.
      */
+    // manager.register("Auto Floor Left Turn", WallEAutoMoveLeftTurnEnc.class);
+    //manager.register("Auto Floor Rt Turn", WallEAutoMoveRightTurnEnc.class);
+
    // manager.register("MR Gyro Test", MRGyroTest.class);
 
     //manager.register("AdafruitRGBExample", AdafruitRGBExample.class);
