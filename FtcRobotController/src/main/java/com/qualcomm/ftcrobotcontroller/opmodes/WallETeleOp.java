@@ -33,10 +33,12 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 
 /**
  * TeleOp Mode
@@ -69,6 +71,18 @@ public class WallETeleOp extends OpMode {
 	// Constant for drive train hill holding
 	final static float HILL_HOLD_POWER = -0.25f;
 
+	//Constants for accumulator shake button presses
+	int waitSHAKE = 0;
+	int countSHAKE = -15;
+
+	//timer for hillbreak
+
+	int timer = 0;
+
+	//timer for accumulator stop
+
+	int accumTimer = 0;
+
 	// Constant for accumulator motor power
 	double ACCUM_SPEED = 0.0;
 
@@ -82,12 +96,24 @@ public class WallETeleOp extends OpMode {
 	final static double SOL_DELTA = 0.005;
 	final static double ZIP_DELTA = 0.010;
 	final static double DUMP_DELTA = 0.02;
+	final static double DUMP_DELTA_SHAKE = 0.05;
 
 	// Hill holding brake set
 	boolean hillBrake = false;
 
 	// Which direction are we driving?
 	boolean driveFwd = true;
+
+	//gamepad buttons are not pressed
+	boolean aIsPressed = false;
+	boolean bIsPressed = false;
+	boolean b2IsPressed = false;
+	boolean yIsPressed = false;
+	boolean rightBumperIsPressed = false;
+	boolean reverseDirection = false;
+	boolean accumIsOn = false;
+	boolean accumTimerOn = false;
+
 
 	// Define our hardware -- motors
 	DcMotor motorRight;
@@ -103,6 +129,10 @@ public class WallETeleOp extends OpMode {
 
 	// Define our hardware -- limit switch for main arm
 	TouchSensor armLimit;
+
+	// Define our hardware -- optical distance sensor
+	OpticalDistanceSensor sensorLight;
+	ColorSensor sensorColor;
 
 	/**
 	 * Constructor
@@ -134,13 +164,19 @@ public class WallETeleOp extends OpMode {
 		motorAccum = hardwareMap.dcMotor.get("m3");
 		motorArm = hardwareMap.dcMotor.get("m4");
 
-
 		oldArm = hardwareMap.servo.get("s1");
 		dumper = hardwareMap.servo.get("s2");
 		rZip = hardwareMap.servo.get("s3");
 		lZip = hardwareMap.servo.get("s4");
 
 		armLimit = hardwareMap.touchSensor.get("t1");
+
+		sensorLight = hardwareMap.opticalDistanceSensor.get("ods");
+		sensorColor = hardwareMap.colorSensor.get("cs");
+
+		// turn on optical distance sensor LED light
+		sensorLight.enableLed(true);
+		sensorColor.enableLed(true);
 
 		// assign the starting position of the servos
 		armPosition = ARM_INIT;
@@ -168,13 +204,21 @@ public class WallETeleOp extends OpMode {
 		// Right stick on pad1 is the left/right turning
 		float throttle = -gamepad1.left_stick_y;
 		float direction = gamepad1.right_stick_x;
+		float armmovement = gamepad2.right_stick_x;
 
 		// Read the switches to see if we are reversing the drive direction
-		if (gamepad1.right_bumper){
+		if ((gamepad1.right_bumper) && (!rightBumperIsPressed) && (!reverseDirection)){
 			driveFwd = true;
-		}else if (gamepad1.left_bumper){
+			rightBumperIsPressed = true;
+			reverseDirection = true;
+
+		}else if ((gamepad1.right_bumper) && (!rightBumperIsPressed) && (reverseDirection)){
 			driveFwd = false;
+			rightBumperIsPressed = true;
+			reverseDirection = false;
 		}
+
+		if (!gamepad1.right_bumper) rightBumperIsPressed = false;
 
 		// If we are driving in reverse we simply flip the throttle value
 		if (!driveFwd){
@@ -184,6 +228,7 @@ public class WallETeleOp extends OpMode {
 		// Convert throttle and direction into left/right motor values
 		float right = throttle - direction;
 		float left = throttle + direction;
+		float arm = armmovement;
 
 		// clip the right/left values so that the values never exceed +/- 1
 		right = Range.clip(right, -1, 1);
@@ -196,23 +241,34 @@ public class WallETeleOp extends OpMode {
 		right = (float)smoothPowerCurve(deadzone(right,0.10));
 		left = (float)smoothPowerCurve(deadzone(left,0.10));
 
-
 		// Check if hill hold brake set
 		if (gamepad1.x) {
 			// Hill holder is pushed -- so we set flag to hillBrake mode
 			hillBrake = true;
+			timer = 0;
 		}
 
-
-		if (hillBrake && Math.abs(right) < 0.05 && Math.abs(left) < 0.05){
+		if ((hillBrake && Math.abs(right) < 0.05 && Math.abs(left) < 0.05)){
 			// Hill brake is set and no joystick input so we hold hill
 			right = HILL_HOLD_POWER;
 			left = HILL_HOLD_POWER;
+			timer++;
 		}
 		else {
 			// Turn off the brake -- either its already off or joystick has throttle
 			hillBrake = false;
+			timer = 0;
 		}
+
+
+       // stop hillbrake after 2 minutes of no input from driver controllers
+        if (gamepad1.atRest() && gamepad2.atRest() && timer >= 12000)
+        {
+            motorRight.setPower(0.0);
+            motorLeft.setPower(0.0);
+            hillBrake = false;
+            timer = 0;
+        }
 
 		// Finally we set the drive motors to appropriate values
 		motorRight.setPower(right);
@@ -226,19 +282,19 @@ public class WallETeleOp extends OpMode {
 		// Servo code for all of the servos on robot
 
 		// "Old" arm position servo -- dumper for climbers into shelter
-		if (gamepad2.right_bumper) {
+		//if (gamepad2.right_bumper) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
-			armPosition += SOL_DELTA;
-		}
-		if (gamepad2.left_bumper) {
+		//	armPosition += SOL_DELTA;
+		//}
+		//if (gamepad2.left_bumper) {
 			// if the Y button is pushed on gamepad1, decrease the position of
 			// the arm servo.
-			armPosition -= SOL_DELTA;
-		}
+		//	armPosition -= SOL_DELTA;
+		//}
 
 		// Stick inputs for zipline tools
-		if (gamepad1.right_trigger >0.2) {
+		if (gamepad1.right_trigger > 0.2) {
 			// if the A button is pushed on gamepad1, increment the position of
 			// the arm servo.
 			rZipPosition -= ZIP_DELTA;
@@ -275,6 +331,23 @@ public class WallETeleOp extends OpMode {
 			// the arm servo.
 			dumpPosition = 0.49;
 		}
+
+		if (gamepad2.left_bumper) {
+			// if the left bumper is pushed on gamepad2, begin shaking the slide back and forth.
+			if (countSHAKE == -15) dumpPosition = 0.65;
+			if (countSHAKE == 0) dumpPosition = 0.60;
+			countSHAKE += 1;
+			if (countSHAKE == 15) countSHAKE = -15;
+		}
+		if (gamepad2.right_bumper) {
+			// if the left bumper is pushed on gamepad2, begin shaking the slide back and forth.
+			if (countSHAKE == -15) dumpPosition = 0.33;
+			if (countSHAKE == 0) dumpPosition = 0.38;
+			countSHAKE += 1;
+			if (countSHAKE == 15) countSHAKE = -15;
+		}
+
+
 		// clip the position values so that they never exceed their allowed range.
 		armPosition = Range.clip(armPosition, ARM_MIN_RANGE, ARM_MAX_RANGE);
 		dumpPosition = Range.clip(dumpPosition, DUMP_MIN, DUMP_MAX);
@@ -314,23 +387,81 @@ public class WallETeleOp extends OpMode {
 
 		// Code for the accumulator motor
 
-		// Read the control buttons and set motor
-		if (gamepad1.a) {
-			// Turn accumulator on in feed in direction
+		if ((gamepad1.a) && (!aIsPressed) && (!accumIsOn))
+		{
 			ACCUM_SPEED = 1.0;
+			aIsPressed = true;
+			accumIsOn = true;
 		}
-		else if (gamepad1.y) {
-			// Turn accumulator on in feed out direction
+		else if ((gamepad1.a) && (!aIsPressed) && (accumIsOn))
+		{
+			ACCUM_SPEED = 0.30;
+			accumTimerOn = true;
+			aIsPressed = true;
+			accumIsOn = false;
+		}
+
+		if ((gamepad1.b) && (!bIsPressed) && (accumIsOn))
+		{
+			ACCUM_SPEED = 0.30;
+			accumTimerOn = true;
+			bIsPressed = true;
+			accumIsOn = false;
+		}
+
+		if ((gamepad2.b) && (!b2IsPressed) && (!accumIsOn))
+		{
+			ACCUM_SPEED = 0.5;
+			b2IsPressed = true;
+			accumIsOn = true;
+		}
+		else if ((gamepad2.b) && (!b2IsPressed) && (accumIsOn) )
+		{
+			ACCUM_SPEED = 0.30;
+			accumTimerOn = true;
+			b2IsPressed = true;
+			accumIsOn = false;
+		}
+
+		if ((gamepad1.y) && (!yIsPressed) && (!accumIsOn))
+		{
 			ACCUM_SPEED = -1.0;
+			yIsPressed = true;
+			accumIsOn = true;
 		}
-		else if (gamepad1.b) {
-			// Stop the accumulator
+		else if ((gamepad1.y) && (!yIsPressed) && (accumIsOn) )
+		{
+			ACCUM_SPEED = -0.30;
+			accumTimerOn = true;
+			yIsPressed = true;
+			accumIsOn = false;
+		}
+
+		if (!gamepad1.a) aIsPressed = false;
+		if (!gamepad1.b) bIsPressed = false;
+		if (!gamepad2.b) b2IsPressed = false;
+		if (!gamepad1.y) yIsPressed = false;
+
+		int lightAlpha = sensorColor.alpha();
+
+
+		if (accumTimerOn) accumTimer++;
+
+
+		if (lightAlpha >= 10 && !accumIsOn && accumTimer >= 65) {
 			ACCUM_SPEED = 0.0;
+			accumTimerOn = false;
+			accumTimer = 0;
 		}
+
+		if (gamepad1.left_bumper) {
+			// Emergency stop on accumulator
+			ACCUM_SPEED = 0.0;
+			accumTimerOn = false;
+			accumIsOn = false;
+		}
+
 		motorAccum.setPower(ACCUM_SPEED);
-		// End of accumulator code
-
-
 
 		/*
 		 * Send telemetry data back to driver station. Note that if we are using
@@ -339,13 +470,16 @@ public class WallETeleOp extends OpMode {
 		 * are currently write only.
 		 */
 		// telemetry.addData("Text", "*** Robot Data***");
-		//telemetry.addData("LZip", "LZip:  " + String.format("%.2f", lZipPosition));
-		//telemetry.addData("RZip", "Rzip:  " + String.format("%.2f", 1.0f - rZipPosition));
-		//telemetry.addData("accum",  "accum: " + String.format("%.2f", ACCUM_SPEED));
-		//telemetry.addData("dumper", "dumper: "  + String.format("%.2f", dumpPosition));
-		telemetry.addData("LeftCur", "LeftCur: " + motorLeft.getCurrentPosition() );
-		telemetry.addData("RtCur", "RtCur: " + motorRight.getCurrentPosition() );
-
+		// telemetry.addData("LZip", "LZip:  " + String.format("%.2f", lZipPosition));
+		// telemetry.addData("RZip", "Rzip:  " + String.format("%.2f", 1.0f - rZipPosition));
+		// telemetry.addData("Arm",  "Arm: " + String.format("%.2f", arm));
+		// telemetry.addData("dumper", "dumper: "  + String.format("%.2f", dumpPosition));
+		// telemetry.addData("LeftCur", "LeftCur: " + motorLeft.getCurrentPosition() );
+		// telemetry.addData("RtCur", "RtCur: " + motorRight.getCurrentPosition() );
+		// telemetry.addData("Timer", "Timer: " + timer);
+		// telemetry.addData("B is", "B is: " + bIsPressed);
+		telemetry.addData("Light Alpha is: ", lightAlpha);
+		telemetry.addData("Arm motor output: ", armStick);
 	}
 
 	/*

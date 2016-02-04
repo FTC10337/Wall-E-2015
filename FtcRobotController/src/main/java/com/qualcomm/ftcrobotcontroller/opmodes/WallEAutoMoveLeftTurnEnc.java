@@ -20,7 +20,7 @@ public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
 
 
     // Constant for accumulator motor power
-    final static double ACCUM_SPEED = 0.50;
+    final static double ACCUM_SPEED = 0.0;
     final static int ENC_TOL = 10;
 
     @Override
@@ -58,19 +58,22 @@ public class WallEAutoMoveLeftTurnEnc extends LinearOpMode {
         motorAccum.setPower(-ACCUM_SPEED);
 
         // Drive forward
-        driveToPosn(2100, 2100, 0.5, 5.0);
-
-        // wait for coast
+        driveToPosn(4032, 4032, 0.75, 5.0);
+        sleep(500);
+        driveToPosn(redblue() * -840, redblue() * 840, 1.0, 5.0);
+        sleep(500);
+        driveToPosn(4450, 4450, 0.75, 5.0);
+        sleep(500);
+        driveToPosn(redblue() * 1250, redblue() * -1250, 1.0, 5.0);
+        sleep(500);
+        driveToPosn(redblue() * 1250, redblue() * -1250, 1.0, 5.0);
+        sleep(500);
+        driveToPosn(-3400, -3400, 0.75, 5.0);
+        sleep(500);
+        driveToPosn(-200, -200, 0.3, 5.0);
         sleep(500);
 
-        // Turn  (redblue returns 1.0 for left and -1 for right)
-        driveToPosn(redblue()*-833, redblue()*833, 1.0, 10.0);
 
-        // wait for coast
-        sleep(500);
-
-        // Drive forward
-        driveToPosn(5800, 5800, 0.5, 5.0);
 
         // and we are done
         motorLeft.setPower(0.0);

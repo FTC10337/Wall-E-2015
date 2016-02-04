@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * 10337
  * MJH
  */
-public class WallEAutoMtnLeft extends LinearOpMode {
+public class WallEAutoMtnRED extends LinearOpMode {
 
     // Define our hardware -- motors
     DcMotor motorRight;
@@ -87,50 +87,46 @@ public class WallEAutoMtnLeft extends LinearOpMode {
             if (count == 25) {
                 dumper.setPosition(0.49);
                 motorAccum.setPower(-ACCUM_SPEED);
-                driveToPosn(2100, 2100, 0.75, 5.0);
-                sleep (500);
+                driveToPosn(1700, 1700, 0.3, 5.0);
+                sleep (100);
             }
             // Turn left 45 deg (redblue returns 1.0 for left and -1 for right)
             if (count == 28) {
                 driveToPosn(redblue() * -833, redblue() * 833, 1.0, 5.0);
-                sleep(500);
+                sleep(100);
             }
-            // Drive forward 8 inches
+            // Drive forward
             if (count == 31) {
-                driveToPosn(2400, 2400, 0.75, 5.0);
-                sleep(500);
+                driveToPosn(3600, 3600, 0.3, 5.0);
+                sleep(100);
             }
             // turn right 90 deg
             if (count == 34) {
                 driveToPosn(redblue() * 1666, redblue() * -1666, 1.0, 5.0);
-                sleep (500);
+                sleep (100);
             }
             // back onto mountain
             if (count == 37) {
                 motorAccum.setPower(0.0);
                 driveToPosn(-1600, -1600, 0.75, 5.0);
-                sleep(500);
+                sleep(100);
             }
             // back onto mountain slowly
             if (count == 40) {
                 driveToPosn(-400, -400, 0.3, 5.0);
-                sleep (500);
+                sleep (100);
             }
 
             //wag tail
             if (count % 2 == 0) {
                rZip.setPosition(0.80);
                 lZip.setPosition(0.20);
-                if (count < 25 ) dumper.setPosition(0.4);
-                if (count > 40 ) dumper.setPosition(0.4);
             }
 
             //wag tail
             if (count % 2 != 0) {
                 rZip.setPosition(1.0);
                 lZip.setPosition(0.0);
-                if (count < 25 ) dumper.setPosition(0.60);
-                if (count > 40 ) dumper.setPosition(0.60);
             }
 
             sleep (200);

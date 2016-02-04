@@ -58,8 +58,15 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("NullOp", NullOp.class);
 
     manager.register("WallETeleop", WallETeleOp.class);
-    manager.register("Auto Mtn Left", WallEAutoMtnLeft.class);
-    manager.register("Auto Mtn Rt", WallEAutoMtnRight.class);
+    manager.register("RED Dump People Auto", WallEAutoPeopleDumpLeft.class);
+    manager.register("BLUE Dump People Auto", WallEAutoPeopleDumpRight.class);
+    manager.register("RED No Dump People Auto", WallEAutoPeopleNoDumpLeft.class);
+    manager.register("BLUE No Dump People Auto", WallEAutoPeopleNoDumpRight.class);
+    manager.register("RED Mnt Auto", WallEAutoMtnRED.class);
+    manager.register("BLUE Mnt Auto", WallEAutoMntBLUE.class);
+    //manager.register("Auto Mtn Left", WallEAutoMtnLeft.class);
+    //manager.register("Auto Mtn Rt", WallEAutoMtnRight.class);
+    //manager.register("Gyro Test", WallEAutoMtnLeftGyro.class);
 
 
     /*

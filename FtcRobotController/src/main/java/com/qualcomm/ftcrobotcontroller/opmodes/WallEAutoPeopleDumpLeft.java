@@ -1,6 +1,5 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
@@ -8,46 +7,54 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
- * autonumus code for driving to blue low zone
- * Dark matter
- * 10337
- * MJH
+ * WallEAutoMoveLeftTurn
  */
-public class WallEAutoMtnLeft extends LinearOpMode {
+public class WallEAutoPeopleDumpLeft extends LinearOpMode {
 
     // Define our hardware -- motors
     DcMotor motorRight;
     DcMotor motorLeft;
     DcMotor motorArm;
     DcMotor motorAccum;
-    Servo dumper;
+
+
+    // Servos
     Servo rZip;
     Servo lZip;
+    Servo dumper;
 
     // Constant for accumulator motor power
     final static double ACCUM_SPEED = 1.0;
     final static int ENC_TOL = 10;
-    final static double DUMP_INIT = 0.49;
+
+    // Constants for Servo min and max postions
+    final static double DUMP_MIN = 0.33;
+    final static double DUMP_MAX = 0.65;
+    final static double RZIP_MIN = 0.0;
+    final static double RZIP_MAX = 1.00;
+    final static double LZIP_MIN = 0.0;
+    final static double LZIP_MAX = 1.00;
+
+
+    // Constants for servo starting positions
     final static double RZIP_INIT = 1.0;
     final static double LZIP_INIT = 0.0;
-
-    double rZipPosition;
-    double lZipPosition;
-    double dumpPosition;
-
-
+    final static double DUMP_INIT = 0.49;
 
     @Override
     public void runOpMode() throws InterruptedException {
         // Initialize all the hardware objects to real hardware instances
         motorRight = hardwareMap.dcMotor.get("m1");
         motorLeft = hardwareMap.dcMotor.get("m2");
-
+        //motorLeft.setDirection(DcMotor.Direction.REVERSE);
         motorAccum = hardwareMap.dcMotor.get("m3");
         motorArm = hardwareMap.dcMotor.get("m4");
-        dumper = hardwareMap.servo.get("s2");
+
+
         rZip = hardwareMap.servo.get("s3");
         lZip = hardwareMap.servo.get("s4");
+        dumper = hardwareMap.servo.get("s2");
+
 
         // Wait for reset encoders
         waitForNextHardwareCycle();
@@ -58,98 +65,79 @@ public class WallEAutoMtnLeft extends LinearOpMode {
         motorRight.setMode(DcMotorController.RunMode.RESET_ENCODERS);
         motorLeft.setMode(DcMotorController.RunMode.RESET_ENCODERS);
 
-        dumpPosition = DUMP_INIT;
-        rZipPosition = RZIP_INIT;
-        lZipPosition = LZIP_INIT;
-
-
         // Wait for reset encoders
         waitForNextHardwareCycle();
         waitForNextHardwareCycle();
         waitForNextHardwareCycle();
 
         motorRight.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
-
         motorLeft.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
 
         waitForStart();
 
+        // Wait for 5 second interval before moving
+        //sleep(5000);
 
-        dumper.setPosition(dumpPosition);
-        rZip.setPosition(rZipPosition);
-        lZip.setPosition(lZipPosition);
+        rZip.setPosition(RZIP_INIT);
+        lZip.setPosition(LZIP_INIT);
+        dumper.setPosition(0.49);
+        sleep(100);
 
-        int count = 0;
+        // Set the accumulator to out
+        motorAccum.setPower(-ACCUM_SPEED);
 
-        for (count = 0; count < 50; count++){
+        // Drive forward
+        driveToPosn(3500, 3500, 0.75, 5.0);
+        sleep(250);
+        driveToPosn(redblue() * -840, redblue() * 840, 1.0, 5.0);
+        sleep(250);
+        driveToPosn(7350, 7350, 0.75, 5.0);
+        sleep(250);
+        driveToPosn(-500, -500, 0.75, 5.0);
+        sleep(250);
 
-            // Drive forward 20 inches
-            if (count == 25) {
-                dumper.setPosition(0.49);
-                motorAccum.setPower(-ACCUM_SPEED);
-                driveToPosn(2100, 2100, 0.75, 5.0);
-                sleep (500);
-            }
-            // Turn left 45 deg (redblue returns 1.0 for left and -1 for right)
-            if (count == 28) {
-                driveToPosn(redblue() * -833, redblue() * 833, 1.0, 5.0);
-                sleep(500);
-            }
-            // Drive forward 8 inches
-            if (count == 31) {
-                driveToPosn(2400, 2400, 0.75, 5.0);
-                sleep(500);
-            }
-            // turn right 90 deg
-            if (count == 34) {
-                driveToPosn(redblue() * 1666, redblue() * -1666, 1.0, 5.0);
-                sleep (500);
-            }
-            // back onto mountain
-            if (count == 37) {
-                motorAccum.setPower(0.0);
-                driveToPosn(-1600, -1600, 0.75, 5.0);
-                sleep(500);
-            }
-            // back onto mountain slowly
-            if (count == 40) {
-                driveToPosn(-400, -400, 0.3, 5.0);
-                sleep (500);
-            }
+        // Turn back to original angle
+        driveToPosn(redblue() * 840, redblue() * -840, 1.0, 5.0);
 
-            //wag tail
-            if (count % 2 == 0) {
-               rZip.setPosition(0.80);
-                lZip.setPosition(0.20);
-                if (count < 25 ) dumper.setPosition(0.4);
-                if (count > 40 ) dumper.setPosition(0.4);
-            }
+        // Set the accumulator to out
+        motorAccum.setPower(0.0);
 
-            //wag tail
-            if (count % 2 != 0) {
-                rZip.setPosition(1.0);
-                lZip.setPosition(0.0);
-                if (count < 25 ) dumper.setPosition(0.60);
-                if (count > 40 ) dumper.setPosition(0.60);
-            }
+        driveToPosn(-1025, -1025, 0.75, 5.0);
 
-            sleep (200);
+        driveToPosn(redblue() * 410, redblue() * -410, 1.0, 5.0);
+        sleep(250);
+        driveToPosn(redblue() * 1250, redblue() * -1250, 1.0, 5.0);
+        sleep(250);
+        rZip.setPosition(0.5);
+        lZip.setPosition(0.5);
+        driveToPosn(-1500, -1500, 0.5, 5.0);
+        sleep(250);
+        driveToPosn(-700, -700, 0.3, 5.0);
+        sleep(250);
+        // Bump it off the wall
+        driveToPosn(100, 100, 0.3, 1.0);
+        sleep(250);
 
+        if (dump()) {
+            // This version of code dumps
+            motorArm.setPower(-0.6);
+            sleep(3000);
         }
 
         // and we are done
+        motorArm.setPower(0.0);
         motorLeft.setPower(0.0);
         motorRight.setPower(0.0);
         motorAccum.setPower(0.0);
-        dumper.setPosition(0.49);
-        rZip.setPosition(1.0);
-        lZip.setPosition(0.0);
     }
 
-        // left turn vresion
+
     double redblue() {
         return 1.0;
     }
+
+    boolean dump() { return true;}
+
 
     /**
      * Indicate whether the drive motors' encoders have reached a value.
